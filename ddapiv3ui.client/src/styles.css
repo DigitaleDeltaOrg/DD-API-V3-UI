@@ -1,0 +1,29 @@
+.app-logo {
+  height: 56px;
+  margin-left: -12px;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+.app-form-field-full-width {
+  width: 100%;
+}
+
+.app-query-result {
+  background-color: whitesmoke;
+  overflow-y: auto;
+  max-height: calc(100vh - 400px);
+  padding: 15px;
+}
+
+.app-query-result > pre {
+  margin-bottom: 0;
+}
+
+.app-spinner {
+  margin: auto;
+  width: 40px !important;
+  height: 40px !important;
+}

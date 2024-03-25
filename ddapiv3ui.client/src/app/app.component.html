@@ -1,0 +1,284 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-auto">
+      <img class="app-logo" src="../assets/ddapi-logo.svg" alt="DD-API UI"/>
+    </div>
+
+    <div class="col">
+      <div class="row">
+        <div class="col-2">
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-label>DdApi Base Url</mat-label>
+            <input matInput
+                   [(ngModel)]="appConfig.ddApiBaseUrl"
+                   (ngModelChange)="generateQuery()">
+          </mat-form-field>
+        </div>
+        <div class="col-2">
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-label>Authentication Url</mat-label>
+            <input matInput
+                   [(ngModel)]="appConfig.authenticationUrl">
+          </mat-form-field>
+        </div>
+        <div class="col-2">
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-label>Client Id</mat-label>
+            <input matInput
+                   [(ngModel)]="appConfig.clientId">
+          </mat-form-field>
+        </div>
+        <div class="col-2">
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-label>Client Secret</mat-label>
+            <input matInput
+                   type="password"
+                   [(ngModel)]="appConfig.clientSecret">
+          </mat-form-field>
+        </div>
+        <div class="col-1">
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-label>Scope</mat-label>
+            <input matInput
+                   [(ngModel)]="appConfig.scope">
+          </mat-form-field>
+        </div>
+        <div class="col-1">
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-label>Grant type</mat-label>
+            <input matInput
+                   [(ngModel)]="appConfig.grantType">
+          </mat-form-field>
+        </div>
+        <div class="col-2">
+          <button mat-icon-button (click)="storeSettings()"><mat-icon>save</mat-icon></button>
+          <button mat-icon-button (click)="clearSettings()"><mat-icon>settings_backup_restore</mat-icon></button>
+        </div>
+      </div>
+    </div>
+
+    <!--
+    <div class="col-12">
+      <mat-form-field appearance="fill"
+                      class="app-form-field-full-width">
+        <mat-label>Selectproperties</mat-label>
+        <mat-select multiple
+                    [(value)]="Select properties"
+                    (selectionChange)="generateQuery()">
+          @for (property of observationQueryProperties; track property) {
+          <mat-option [value]="property">{{property.name}}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    -->
+
+    <div class="col-12">
+      <mat-form-field appearance="fill"
+                      class="app-form-field-full-width">
+        <mat-label>Query properties</mat-label>
+        <mat-select multiple
+                    [(value)]="queryProperties"
+                    (selectionChange)="generateQueryItems()">
+          @for (property of observationQueryProperties; track property) {
+          <mat-option [value]="property">{{property.name}}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="col-12">
+      @for(queryItem of queryItems; track queryItem; let index = $index; let last = $last) {
+      <div class="row">
+
+        <div class="col-1"
+             style="padding-right:0">
+          @if (propertyTypePropertyConvertersMapping[queryItem.property.type].length > 0) {
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-select [(value)]="queryItem.propertyConverter.value"
+                        (selectionChange)="onQueryItemPropertyConverterSelectionChange($event, queryItem)">
+              <mat-option></mat-option>
+              @for (converter of propertyTypePropertyConvertersMapping[queryItem.property.type]; track converter) {
+              <mat-option [value]="converter.value">{{converter.value}}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          }
+        </div>
+
+        <div class="col"
+             style="padding-left:0">
+          @if (!queryItem.propertyConverter.value || !queryItem.propertyConverter.data?.inputType) {
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <input matInput
+                   readonly
+                   type="text"
+                   [value]="queryItem.property.name">
+          </mat-form-field>
+          }
+          @if (queryItem.propertyConverter.data; as propertyConverter) {
+          @if (propertyConverter.inputType) {
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <input matInput
+                   [type]="propertyConverter.inputType"
+                   [(ngModel)]="propertyConverter.inputValue"
+                   (ngModelChange)="onQueryItemPropertyConverterInputValueSelectionChange($event, queryItem)">
+            <span matTextPrefix>({{queryItem.property.name}}, {{propertyConverter.inputPrefix}}</span>
+            <span matTextSuffix>{{propertyConverter.inputSuffix}})</span>
+          </mat-form-field>
+          }
+          }
+        </div>
+
+        <div class="col-1">
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-select [(value)]="queryItem.comparer.value"
+                        (selectionChange)="onQueryItemComparerSelectionChange($event, queryItem)">
+              @for (comparer of propertyTypeComparersMapping[queryItem.propertyConverter.data?.outputType ?? queryItem.property.type]; track comparer) {
+              <mat-option [value]="comparer.value">{{comparer.value}}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="col-1"
+             style="padding-right:0">
+          @if (queryItem.propertyConverter.data?.outputType ?? queryItem.property.type; as valueConverterType) {
+          @if (outputTypeValueConvertersMapping[valueConverterType]; as valueConverters) {
+          @if ((valueConverters ?? []).length > 0) {
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-select [(value)]="queryItem.valueConverter.value"
+                        (selectionChange)="onQueryItemValueConverterSelectionChange($event, queryItem)">
+              <mat-option></mat-option>
+              @for (converter of outputTypeValueConvertersMapping[queryItem.propertyConverter.data?.outputType ?? queryItem.property.type]; track converter) {
+              <mat-option [value]="converter.value">{{converter.value}}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          }
+          }
+          }
+        </div>
+
+        <div class="col"
+             style="padding-left:0">
+          @if (queryItem.valueConverter.data?.inputType ?? (queryItem.propertyConverter.data?.outputType ?? queryItem.property.type); as valueType) {
+
+          @if (valueType == 'Boolean') {
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-select [(value)]="queryItem.value"
+                        (selectionChange)="generateQuery()">
+              <mat-option [value]="'True'">True</mat-option>
+              <mat-option [value]="'False'">False</mat-option>
+            </mat-select>
+          </mat-form-field>
+          }
+          @else {
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <input matInput
+                   [type]="['in', 'notin', 'contains'].includes(queryItem.comparer.value) ? 'text' : inputTypeMapping[valueType]"
+                   [(ngModel)]="queryItem.value"
+                   (ngModelChange)="generateQuery()">
+          </mat-form-field>
+          }
+          }
+        </div>
+
+        <div class="col-1">
+          @if (!last) {
+          <mat-form-field appearance="fill"
+                          class="app-form-field-full-width">
+            <mat-select [(value)]="queryItem.logical"
+                        (selectionChange)="generateQuery()">
+              <mat-option value="and">and</mat-option>
+              <mat-option value="or">or</mat-option>
+              <mat-option value="not">not</mat-option>
+            </mat-select>
+          </mat-form-field>
+          }
+        </div>
+
+        <div class="col-1">
+          <button mat-icon-button
+                  aria-label="Copy"
+                  color="primary"
+                  (click)="copyQueryItem(queryItem, index)">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+
+          @if (queryItem.copied) {
+          <button mat-icon-button
+                  aria-label="Remove"
+                  color="warn"
+                  (click)="removeQueryItem(queryItem, index)">
+            <mat-icon>close</mat-icon>
+          </button>
+          }
+
+        </div>
+
+      </div>
+      }
+    </div>
+
+    <div class="col-12">
+      <mat-form-field appearance="fill"
+                      class="app-form-field-full-width">
+        <mat-label>DD-API Query</mat-label>
+        <textarea matInput
+                  type="text"
+                  readonly
+                  [value]="queryUrl">
+        </textarea>
+      </mat-form-field>
+    </div>
+
+    <div class="col-12">
+      <div class="row gy-3">
+        <div class="col"></div>
+        <div class="col-auto">
+          <mat-paginator style="background-color:whitesmoke"
+                         [length]="queryResultLength"
+                         [pageSize]="queryPageSize"
+                         [pageSizeOptions]="queryPageSizeOptions"
+                         (page)="onPaginatorChange($event)"
+                         aria-label="Select page">
+          </mat-paginator>
+        </div>
+
+        <div class="col-auto">
+          <button mat-raised-button
+                  color="primary"
+                  (click)="get()">
+            GET
+          </button>
+        </div>
+
+        <div class="col-12">
+          <div class="app-query-result">
+            @if (queryResult) {
+              <ngx-json-viewer [json]="queryResult">
+              </ngx-json-viewer>
+            }
+            @else {
+              <mat-spinner class="app-spinner"></mat-spinner>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
