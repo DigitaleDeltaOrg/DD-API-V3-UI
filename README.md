@@ -15,4 +15,4 @@ The current version lacks some features that we want to add over time. Now imple
 - Create a map for selecting geographical objects and tie these to the /reference geography lists.
 - Create an export option
 - Store multiple connections in the localStorage
-- 
+
