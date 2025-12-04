@@ -1,6 +1,5 @@
 .app-logo {
-  height: 56px;
-  margin-left: -12px;
+  width: 100%;
 }
 
 html, body { height: 100%; }
@@ -11,14 +10,14 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   width: 100%;
 }
 
-.app-query-result {
+.app-result {
   background-color: whitesmoke;
-  overflow-y: auto;
-  max-height: calc(100vh - 400px);
   padding: 15px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(0,0,0,0.4)
 }
 
-.app-query-result > pre {
+.app-result > pre {
   margin-bottom: 0;
 }
 

@@ -1,0 +1,59 @@
+@switch(inputType) {
+  @case ('autocomplete') {
+<mat-form-field appearance="fill"
+                class="app-form-field-full-width">
+  <mat-label>Value</mat-label>
+  <input type="text"
+         matInput
+         [formControl]="autoCompleteFormControl"
+         [matAutocomplete]="auto" />
+  <mat-autocomplete #auto="matAutocomplete"
+                    (optionSelected)="onAutoCompleteOptionSelected($event.option.value)">
+    <mat-option *ngFor="let option of valueOptions$ | async"
+                [value]="option">
+      {{ option }}
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>
+  }
+
+  @case ('multiselect') {
+<mat-form-field appearance="fill"
+                class="app-form-field-full-width">
+  <mat-label>Value</mat-label>
+  <input type="text"
+         matInput
+         [formControl]="multiSelectFormControl"
+         [matAutocomplete]="auto" />
+  <mat-autocomplete #auto="matAutocomplete">
+    <mat-option *ngFor="let option of valueOptions$ | async"
+                (onSelectionChange)="onMultiSelectSelectionChange(option, $event)">
+      {{ option }}
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>
+  }
+
+  @case ('checkbox') {
+<mat-form-field appearance="fill"
+                class="app-form-field-full-width">
+  <mat-label>Value</mat-label>
+  <mat-select [(value)]="filterItem.value"
+              (selectionChange)="onValueChange($event)">
+    <mat-option [value]="'true'">true</mat-option>
+    <mat-option [value]="'false'">false</mat-option>
+  </mat-select>
+</mat-form-field>
+  }
+
+  @default {
+<mat-form-field appearance="fill"
+                class="app-form-field-full-width">
+  <mat-label>Value</mat-label>
+  <input matInput
+         [type]="['in', 'notin', 'contains'].includes(filterItem.comparer.value) ? 'text' : inputType"
+         [(ngModel)]="filterItem.value"
+         (ngModelChange)="onValueChange($event)">
+</mat-form-field>
+  }
+}

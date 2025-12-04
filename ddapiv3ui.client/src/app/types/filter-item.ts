@@ -2,8 +2,10 @@ import { Comparer } from "./comparer";
 import { Property } from "./property";
 import { PropertyConverter } from "./property-converter";
 import { ValueConverter } from "./value-converter";
+import { AppService } from "../app.service";
+import { AppSettings } from "./app-settings";
 
-export class QueryItem {
+export class FilterItem {
   constructor(property: Property) {
     this.propertyFormat = property.name;
     this.property = property;
@@ -17,7 +19,7 @@ export class QueryItem {
     };
     this.valueConverter = { value: null };
     this.logical = 'and';
-    this.copied = false;
+    this.copied = false;    
   }
 
   propertyFormat: string;
@@ -27,6 +29,6 @@ export class QueryItem {
   valueConverter: { value: string | null, data?: ValueConverter };
   value: any;
   logical: string;
-  query: string = '';
+  filter: string = '';
   copied: boolean;
 }

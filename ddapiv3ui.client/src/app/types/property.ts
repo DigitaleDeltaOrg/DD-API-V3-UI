@@ -1,12 +1,10 @@
 export interface Property {
-  name: string;
-  type: string;
-  isNullable: boolean;
+  isArray: boolean;
   isKey: boolean;
+  isNullable: boolean;
   isString: boolean;
-  isArray?: boolean;
-  parent?: string;
-  properties?: Property[];
+  name: string;
+  type: string; 
 }
 
 

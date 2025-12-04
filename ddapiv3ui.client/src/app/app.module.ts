@@ -13,10 +13,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NgxJsonViewerModule } from 'ngx-json-viewer';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { FilterItemValueComponent } from './components/filter-item-value/filter-item-value.component';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    FilterItemValueComponent
   ],
   imports: [
     BrowserModule,
@@ -31,11 +35,15 @@ import { NgxJsonViewerModule } from 'ngx-json-viewer';
     MatIconModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatAutocompleteModule,
+    MatExpansionModule,
     NgxJsonViewerModule
   ],
   providers: [
     provideAnimationsAsync()
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [
+    AppComponent
+  ]
 })
 export class AppModule { }

@@ -5,7 +5,5 @@ export interface PropertyConverter {
   outputType: string;
   inputType: string | null;
   inputPlaceholder: string | null;
-  inputPrefix: string | null;
-  inputSuffix: string | null;
   inputValue?: any | null;
 }
