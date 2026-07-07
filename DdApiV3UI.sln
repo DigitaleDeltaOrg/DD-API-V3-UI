@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.8.34525.116
+# Visual Studio Version 18
+VisualStudioVersion = 18.5.11801.241 oobstable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DdApiV3UI.Server", "DdApiV3UI.Server\DdApiV3UI.Server.csproj", "{0F497518-FAD8-4976-804E-E97C289275E8}"
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "ddapiv3ui.client", "ddapiv3ui.client\ddapiv3ui.client.esproj", "{0AF5968B-50BF-4A54-90D8-6F3B0380D433}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsdlInspector", "CsdlInspector\CsdlInspector.csproj", "{106082AD-7A1F-4D0E-B803-35A1677FA4DE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitaleDelta.CsdlParser", "CsdlParser\DigitaleDelta.CsdlParser\DigitaleDelta.CsdlParser.csproj", "{AB358CB9-5615-AF55-85A8-4808744B0516}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitaleDelta.Contracts", "CsdlParser\DigitaleDelta.Contracts\DigitaleDelta.Contracts.csproj", "{8A274634-E567-3DB7-A34B-94B4625D2F89}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +27,14 @@ Global
 		{0AF5968B-50BF-4A54-90D8-6F3B0380D433}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AF5968B-50BF-4A54-90D8-6F3B0380D433}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0AF5968B-50BF-4A54-90D8-6F3B0380D433}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{106082AD-7A1F-4D0E-B803-35A1677FA4DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{106082AD-7A1F-4D0E-B803-35A1677FA4DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{106082AD-7A1F-4D0E-B803-35A1677FA4DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{106082AD-7A1F-4D0E-B803-35A1677FA4DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB358CB9-5615-AF55-85A8-4808744B0516}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB358CB9-5615-AF55-85A8-4808744B0516}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB358CB9-5615-AF55-85A8-4808744B0516}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB358CB9-5615-AF55-85A8-4808744B0516}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A274634-E567-3DB7-A34B-94B4625D2F89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A274634-E567-3DB7-A34B-94B4625D2F89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A274634-E567-3DB7-A34B-94B4625D2F89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A274634-E567-3DB7-A34B-94B4625D2F89}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

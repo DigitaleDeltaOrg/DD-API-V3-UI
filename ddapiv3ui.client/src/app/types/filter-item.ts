@@ -18,17 +18,15 @@ export class FilterItem {
       }
     };
     this.valueConverter = { value: null };
-    this.logical = 'and';
-    this.copied = false;    
+    this.value = null;
+    this.logical = null;  
   }
 
-  propertyFormat: string;
+  propertyFormat: string | null;
   property: Property;
   propertyConverter: { value: string | null, data?: PropertyConverter };
   comparer: { value: string, data: Comparer };
   valueConverter: { value: string | null, data?: ValueConverter };
-  value: any;
-  logical: string;
-  filter: string = '';
-  copied: boolean;
+  value: any | null;
+  logical: string | null;
 }

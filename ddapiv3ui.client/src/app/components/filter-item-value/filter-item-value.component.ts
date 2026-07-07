@@ -34,9 +34,8 @@ export class FilterItemValueComponent {
   ngOnInit(): void {
     this.handleQueryItemChange();
     this.setValueType();
-    this.setInputType();
-    this.setReferenceType();   
-    this.setValueOptions();
+    this.setInputType('');
+    this.setReferenceType();  
   }
 
   ngOnDestroy(): void {
@@ -48,10 +47,10 @@ export class FilterItemValueComponent {
   handleQueryItemChange(): void {
     this.filterItemChange$.pipe(takeUntil(this.destroySubscriptions$)).subscribe(queryItemIndex => {
       if (queryItemIndex == this.filterItemIndex) {
+        var currentInputType = this.inputType;
         this.setValueType();
-        this.setInputType();
+        this.setInputType(currentInputType);
         this.setReferenceType();
-        this.setValueOptions();
       }
     })
   }  
@@ -61,16 +60,22 @@ export class FilterItemValueComponent {
     this.valueType = this.filterItem.valueConverter.data?.inputType ?? (this.filterItem.propertyConverter.data?.outputType ?? this.filterItem.property.type);
   }
 
-  setInputType(): void {
+  setInputType(currentInputType: string): void {
     this.inputType = this.inputTypeMapping[this.valueType];
     if (this.valueType == 'String') {
       if (['eq', 'ne'].includes(this.filterItem.comparer.value)) {
         this.inputType = 'autocomplete';
+        if (this.inputType != currentInputType) {
+          this.setValueOptions();
+        }
       }
       if (['in', 'notin'].includes(this.filterItem.comparer.value)) {
         this.inputType = 'multiselect';
+        if (this.inputType != currentInputType) {
+          this.setValueOptions();
+        }
       }
-    }
+    }    
   }
 
   setReferenceType(): void {
@@ -88,13 +93,16 @@ export class FilterItemValueComponent {
         filter(value => typeof value === 'string'),
         debounceTime(300),
         distinctUntilChanged(),
-        filter(value => (value as string).length >= 1),
         switchMap(value => {
           this.filterItem.value = value;
-          this.valueChange.emit(this.filterItem.value);    
-          return this.service.get(this.getUrl(this.filterItem.value), this.apiKey).pipe(map(result => {
-            return result.value?.map((v: any) => v[this.property]);
-          }));
+          this.valueChange.emit(this.filterItem.value);
+          if ((value as string).length > 0) {
+            return this.service.get(this.getUrl(this.filterItem.value), this.apiKey).pipe(map(result => {
+              return result.value?.map((v: any) => v[this.property]);
+            }));
+          } else {
+            return [];
+          }         
         })
       )
     }
@@ -120,8 +128,8 @@ export class FilterItemValueComponent {
 
   //events
   onAutoCompleteOptionSelected(args: any): void {
-    this.filterItem.value = args.Code;
-    this.valueChange.emit(this.filterItem.value);
+      //this.filterItem.value = args.Code;
+      //this.valueChange.emit(this.filterItem.value);
   }
 
   onMultiSelectSelectionChange(option: any, args: any): void {
@@ -145,13 +153,13 @@ export class FilterItemValueComponent {
     var url = `${this.baseUrl}/references?$top=5`;
     switch (this.endPoint) {
       case 'observations':
-        url += `&$select=${this.property}&filter=Type eq '${this.referenceType}' and startswith(tolower(${this.property}),tolower('${value}'))`;
+        url += `&$filter=Type eq '${this.referenceType}' and startswith(tolower(${this.property}),'${value.toLowerCase()}')`;
         break;
       case 'references':
         if (this.filterItem.property.name == 'Type') {
-          url += `&select=Code&filter=Type eq '' and startswith(tolower(Code),tolower('${value}'))`;
+          url += `&$filter=Type eq '' and startswith(tolower(Code),tolower('${value}'))`;
         } else {
-          url += `&select=${this.property}&filter=startswith(tolower(${this.property}),tolower('${value}'))`;
+          url += `&$filter=startswith(tolower(${this.property}),tolower('${value}'))`;
         }
         break;
     }

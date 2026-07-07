@@ -7,5 +7,6 @@ namespace DdApiV3UI.Server.Models
         [JsonPropertyName("url")] public string Url { get; set; } = string.Empty;
         [JsonPropertyName("apiKey")] public string? ApiKey { get; set; }
         [JsonPropertyName("coordinateSystem")] public string? CoordinateSystem { get; set; }
+        [JsonPropertyName("endPoint")] public string? EndPoint { get; set; }
     }
 }

@@ -19,11 +19,12 @@ export class AppService {
     return this.http.get<AppSettings>('/ddapi/appsettings');
   }
 
-  getMetaData(baseUrl: string): Observable<Record<string, Type>> {
+  getMetaData(baseUrl: string, endPoint: string): Observable<any[]> {
     let body = {
-      url: baseUrl
+      url: baseUrl,
+      endPoint: endPoint
     };
-    return this.http.post<Record<string, Type>>('/ddapi/metadata', body);
+    return this.http.post<any[]>('/ddapi/metadata', body);
   }
 
   get(url: string, apiKey: string, coordinateSystem?: string): Observable<any> {

@@ -1,8 +1,7 @@
 ﻿using DdApiV3UI.Server.Models;
+using DigitaleDelta.CsdlParser;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
-using CsdlPropertyInspector;
-using static CsdlPropertyInspector.CsdlInspector;
 
 namespace DdApiV3UI.Server.Controllers
 {
@@ -24,15 +23,25 @@ namespace DdApiV3UI.Server.Controllers
 
         [Route("metadata")]
 		[HttpPost]
-		public async Task<Dictionary<string, CsdlType>> GetMetaDataAsync([FromBody] RequestParameters requestParameters)
+		public async Task<IEnumerable<CsdlProperty>> GetMetaDataAsync([FromBody] RequestParameters requestParameters)
 		{
 			var client      = new HttpClient();
 			var metaDataUri = new Uri($"{requestParameters.Url}/$metadata"); // Examine the $metadata manifest.
 			var response    = await client.GetAsync(metaDataUri).ConfigureAwait(false);
 			var metaData    = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-			
-			return !string.IsNullOrEmpty(metaData) ? Inspect(metaData, "Observation") : new Dictionary<string, CsdlType>();
-		}
+
+            var result = Enumerable.Empty<CsdlProperty>();
+
+            if (CsdlParser.TryParse(metaData, out var csdlModel, out var errorString)) {
+
+				if (csdlModel != null && requestParameters.EndPoint != null)
+				{
+                    result = CsdlFlattener.FlattenEntityProperties(csdlModel, requestParameters.EndPoint);
+                }
+            }
+
+			return result;
+        }
 
 		
 		[Route("")]
@@ -54,17 +63,15 @@ namespace DdApiV3UI.Server.Controllers
 
 				if (requestParameters.ApiKey != null)
 				{
-                    request.Headers.Add("X-Api-Key", requestParameters.ApiKey);
+                    request.Headers.Add("X-API-KEY", requestParameters.ApiKey);
                 }
 
-                if (requestParameters.CoordinateSystem != null)
-                {
-                    request.Headers.Add("Accept-Crs", requestParameters.CoordinateSystem);
-                }
+				if (requestParameters.CoordinateSystem != null)
+				{
+					request.Headers.Add("Accept-Crs", requestParameters.CoordinateSystem);
+				}
 
-                var response = await client.SendAsync(request);
-				response.EnsureSuccessStatusCode();
-					
+				var response = await client.SendAsync(request);					
 				return Ok(await response.Content.ReadAsStringAsync());
 			}
 			catch (Exception e)

@@ -5,8 +5,10 @@
   <mat-label>Value</mat-label>
   <input type="text"
          matInput
+         [value]="filterItem.value"
          [formControl]="autoCompleteFormControl"
-         [matAutocomplete]="auto" />
+         [matAutocomplete]="auto"
+         [disabled]="filterItem.property.name == ''" />
   <mat-autocomplete #auto="matAutocomplete"
                     (optionSelected)="onAutoCompleteOptionSelected($event.option.value)">
     <mat-option *ngFor="let option of valueOptions$ | async"
@@ -23,11 +25,13 @@
   <mat-label>Value</mat-label>
   <input type="text"
          matInput
+         [value]="filterItem.value"
          [formControl]="multiSelectFormControl"
          [matAutocomplete]="auto" />
   <mat-autocomplete #auto="matAutocomplete">
     <mat-option *ngFor="let option of valueOptions$ | async"
-                (onSelectionChange)="onMultiSelectSelectionChange(option, $event)">
+                (onSelectionChange)="onMultiSelectSelectionChange(option, $event)"
+                [disabled]="filterItem.property.name == ''">
       {{ option }}
     </mat-option>
   </mat-autocomplete>
@@ -39,7 +43,8 @@
                 class="app-form-field-full-width">
   <mat-label>Value</mat-label>
   <mat-select [(value)]="filterItem.value"
-              (selectionChange)="onValueChange($event)">
+              (selectionChange)="onValueChange($event)"
+              [disabled]="filterItem.property.name == ''">
     <mat-option [value]="'true'">true</mat-option>
     <mat-option [value]="'false'">false</mat-option>
   </mat-select>
@@ -53,7 +58,8 @@
   <input matInput
          [type]="['in', 'notin', 'contains'].includes(filterItem.comparer.value) ? 'text' : inputType"
          [(ngModel)]="filterItem.value"
-         (ngModelChange)="onValueChange($event)">
+         (ngModelChange)="onValueChange($event)"
+         [disabled]="filterItem.property.name == ''">
 </mat-form-field>
   }
 }

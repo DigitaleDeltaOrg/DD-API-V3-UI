@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <SpaRoot>..\ddapiv3ui.client</SpaRoot>
-    <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
-    <SpaProxyServerUrl>https://localhost:4200</SpaProxyServerUrl>
+	  <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
+	  <SpaProxyServerUrl>https://localhost:44431</SpaProxyServerUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,15 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CsdlInspector\CsdlInspector.csproj" />
-    <ProjectReference Include="..\ddapiv3ui.client\ddapiv3ui.client.esproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
+    <DistFiles Include="..\ddapiv3ui.client\dist\**" />
+    <None Include="@(DistFiles)" Link="wwwroot\%(RecursiveDir)%(FileName)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <DistFiles Include="..\ddapiv3ui.client\dist\**" />
-    <None Include="@(DistFiles)" Link="wwwroot\%(RecursiveDir)%(FileName)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
+    <ProjectReference Include="..\CsdlParser\DigitaleDelta.Contracts\DigitaleDelta.Contracts.csproj" />
+    <ProjectReference Include="..\CsdlParser\DigitaleDelta.CsdlParser\DigitaleDelta.CsdlParser.csproj" />
   </ItemGroup>
 
   <Target Name="NgBuild" BeforeTargets="Build">

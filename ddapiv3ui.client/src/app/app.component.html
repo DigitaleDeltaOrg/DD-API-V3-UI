@@ -1,6 +1,5 @@
 <div class="container-fluid">
   <div class="row align-content-center">
-
     <div class="col-12">
       <div class="row">
         <div class="col-1 gy-3">
@@ -22,13 +21,13 @@
 
         <div class="col gy-3">
           <mat-form-field class="app-form-field-full-width">
-            <mat-label>Api Key</mat-label>
+            <mat-label>Api key</mat-label>
             <input matInput
-                   type="password"
                    [(ngModel)]="apiKey"
                    (ngModelChange)="onApiKeyChange($event)">
           </mat-form-field>
         </div>
+
         <div class="col-2 gy-3">
           <mat-form-field appearance="fill"
                           class="app-form-field-full-width">
@@ -36,11 +35,12 @@
             <mat-select [(value)]="endPoint"
                         (selectionChange)="onEndPointChange($event)">
               @for(item of appSettings.endPoints; track item) {
-                <mat-option [value]="item">{{item.text}}</mat-option>
+              <mat-option [value]="item">{{item.text}}</mat-option>
               }
             </mat-select>
           </mat-form-field>
         </div>
+
         <div class="col-2 gy-3">
           <mat-form-field appearance="fill"
                           class="app-form-field-full-width">
@@ -53,16 +53,44 @@
             </mat-select>
           </mat-form-field>
         </div>
+
       </div>
     </div>
 
-    <div class="col-12 gy-3">
+
+    <div class="col-2 gy-3">
       <mat-form-field appearance="fill"
                       class="app-form-field-full-width">
-        <mat-label>$filter</mat-label>
+        <mat-label>$top</mat-label>
+        <mat-select [(value)]="pageSize"
+                    (selectionChange)="generateUrl()">
+          @for (option of pageSizeOptions; track option) {
+          <mat-option [value]="option">{{option}}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="col-2 gy-3">
+      <mat-form-field appearance="fill"
+                      class="app-form-field-full-width">
+        <mat-label>$count</mat-label>
+        <mat-select [(value)]="count"
+                    (selectionChange)="generateUrl()">
+          <mat-option [value]="null"></mat-option>
+          <mat-option [value]="'true'">true</mat-option>
+          <mat-option [value]="'false'">false</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="col-8 gy-3">
+      <mat-form-field appearance="fill"
+                      class="app-form-field-full-width">
+        <mat-label>$select</mat-label>
         <mat-select multiple
-                    [(value)]="filterProperties"
-                    (selectionChange)="setFilterItems()">
+                    [(value)]="selectProperties"
+                    (selectionChange)="generateUrl()">
           @for (property of properties; track property) {
           <mat-option [value]="property">{{property.name}}</mat-option>
           }
@@ -71,44 +99,53 @@
     </div>
 
 
+
     <div class="col-12" style="padding-bottom: 20px">
 
-      <mat-expansion-panel>
+      <mat-expansion-panel [expanded]="true">
         <mat-expansion-panel-header>
           <mat-panel-title>$filter ({{filterItems.length}})</mat-panel-title>
         </mat-expansion-panel-header>
+
+        <!--<div class="row">
+          <div class="col-12">
+            <mat-form-field appearance="fill"
+                            class="app-form-field-full-width">
+              <mat-label>properties</mat-label>
+              <mat-select multiple
+                          [(value)]="filterProperties"
+                          (selectionChange)="setFilterItems()">
+                @for (property of properties; track property) {
+                <mat-option [value]="property">{{property.name}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>-->
         @for(filterItem of filterItems; track filterItem; let index = $index; let last = $last) {
         <div class="row">
 
           <div class="col-1">
-            @if (propertyTypePropertyConvertersMapping[filterItem.property.type].length > 0) {
             <mat-form-field appearance="fill"
                             class="app-form-field-full-width">
               <mat-select [(value)]="filterItem.propertyConverter.value"
-                          (selectionChange)="onFilterItemPropertyConverterChange($event, filterItem, index)">
+                          (selectionChange)="onFilterItemPropertyConverterChange($event, filterItem, index)"
+                          [disabled]="filterItem.property.name == ''">
                 <mat-option></mat-option>
                 @for (converter of propertyTypePropertyConvertersMapping[filterItem.property.type]; track converter) {
                 <mat-option [value]="converter.value">{{converter.value}}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
-            }
           </div>
 
           <div class="col">
-            @if (!filterItem.propertyConverter.value || !filterItem.propertyConverter.data?.inputType) {
-            <mat-form-field appearance="fill"
-                            class="app-form-field-full-width">
-              <input matInput
-                     readonly
-                     type="text"
-                     [value]="filterItem.property.name">
-            </mat-form-field>
-            }
+
             @if (filterItem.propertyConverter.data; as propertyConverter) {
             @if (propertyConverter.inputType) {
             <mat-form-field appearance="fill"
                             class="app-form-field-full-width">
+              <mat-label>{{propertyConverter.inputPlaceholder}}</mat-label>
               <input matInput
                      [type]="propertyConverter.inputType"
                      [(ngModel)]="propertyConverter.inputValue"
@@ -116,13 +153,25 @@
             </mat-form-field>
             }
             }
+            @if (filterItem.propertyConverter.data?.inputType == null) {
+            <mat-form-field appearance="fill"
+                            class="app-form-field-full-width">
+              <mat-label>Property</mat-label>
+              <mat-select [(value)]="filterItem.property"
+                          (selectionChange)="onFilterItemPropertyChange($event, filterItem, index)">
+                @for (property of properties; track property) {
+                <mat-option [value]="property">{{property.name}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            }
           </div>
-
           <div class="col-1">
             <mat-form-field appearance="fill"
                             class="app-form-field-full-width">
               <mat-select [(value)]="filterItem.comparer.value"
-                          (selectionChange)="onFilterItemComparerChange($event, filterItem, index)">
+                          (selectionChange)="onFilterItemComparerChange($event, filterItem, index)"
+                          [disabled]="filterItem.property.name == ''">
                 @for (comparer of propertyTypeComparersMapping[filterItem.propertyConverter.data?.outputType ?? filterItem.property.type]; track comparer) {
                 <mat-option [value]="comparer.value">{{comparer.value}}</mat-option>
                 }
@@ -131,22 +180,27 @@
           </div>
 
           <div class="col-1">
-            @if (filterItem.propertyConverter.data?.outputType ?? filterItem.property.type; as valueConverterType) {
-            @if (outputTypeValueConvertersMapping[valueConverterType]; as valueConverters) {
-            @if ((valueConverters ?? []).length > 0) {
-            <mat-form-field appearance="fill"
-                            class="app-form-field-full-width">
-              <mat-select [(value)]="filterItem.valueConverter.value"
-                          (selectionChange)="onFilterItemValueConverterChange($event, filterItem, index)">
-                <mat-option></mat-option>
-                @for (converter of outputTypeValueConvertersMapping[filterItem.propertyConverter.data?.outputType ?? filterItem.property.type]; track converter) {
-                <mat-option [value]="converter.value">{{converter.value}}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
-            }
-            }
-            }
+            <!--@if (filterItem.propertyConverter.data?.outputType ?? filterItem.property.type; as valueConverterType) {
+              @if (outputTypeValueConvertersMapping[valueConverterType]; as valueConverters) {
+                @if ((valueConverters ?? []).length > 0) {-->
+
+
+
+
+                <mat-form-field appearance="fill"
+                                class="app-form-field-full-width">
+                  <mat-select [(value)]="filterItem.valueConverter.value"
+                              (selectionChange)="onFilterItemValueConverterChange($event, filterItem, index)"
+                              [disabled]="filterItem.property.name == ''">
+                    <mat-option></mat-option>
+                    @for (converter of outputTypeValueConvertersMapping[filterItem.propertyConverter.data?.outputType ?? filterItem.property.type]; track converter) {
+                    <mat-option [value]="converter.value">{{converter.value}}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <!--}
+              }
+            }-->
           </div>
 
           <div class="col">
@@ -162,108 +216,36 @@
           </div>
 
           <div class="col-1">
-            @if (!last) {
             <mat-form-field appearance="fill"
                             class="app-form-field-full-width">
               <mat-select [(value)]="filterItem.logical"
-                          (selectionChange)="generateUrl()">
+                          (selectionChange)="onFilterItemLogicalChange($event, filterItem, index)"
+                          [disabled]="filterItem.property.name == ''">
+                @if(index == filterItems.length - 2) {
+                <mat-option></mat-option>
+                }
                 <mat-option value="and">and</mat-option>
                 <mat-option value="or">or</mat-option>
                 <mat-option value="not">not</mat-option>
               </mat-select>
             </mat-form-field>
-            }
           </div>
-
-          <!--<div class="col-1">
-            <button mat-icon-button
-                    aria-label="Copy"
-                    color="primary"
-                    (click)="copyQueryItem(filterItem, index)">
-              <mat-icon>content_copy</mat-icon>
-            </button>
-
-            @if (filterItem.copied) {
-            <button mat-icon-button
-                    aria-label="Remove"
-                    color="warn"
-                    (click)="removeQueryItem(filterItem, index)">
-              <mat-icon>close</mat-icon>
-            </button>
-            }
-
-          </div>-->
-
         </div>
         }
       </mat-expansion-panel>
     </div>
 
 
-    <div class="col-1">
-      <mat-form-field appearance="fill"
-                      class="app-form-field-full-width">
-        <mat-label>$top</mat-label>
-        <mat-select [(value)]="pageSize"
-                    (selectionChange)="generateUrl()">
-          @for (option of pageSizeOptions; track option) {
-          <mat-option [value]="option">{{option}}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-
-    <div class="col-1">
-      <mat-form-field appearance="fill"
-                      class="app-form-field-full-width">
-        <mat-label>$count</mat-label>
-        <mat-select [(value)]="count"
-                    (selectionChange)="generateUrl()">
-          <mat-option [value]="null"></mat-option>
-          <mat-option [value]="'true'">true</mat-option>
-          <mat-option [value]="'false'">false</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </div>
-
-    <div class="col-5">
-      <mat-form-field appearance="fill"
-                      class="app-form-field-full-width">
-        <mat-label>$select</mat-label>
-        <mat-select multiple
-                    [(value)]="selectProperties"
-                    (selectionChange)="generateUrl()">
-          @for (property of properties; track property) {
-          <mat-option [value]="property">{{property.name}}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-
-    <div class="col-5">
-      <mat-form-field appearance="fill"
-                      class="app-form-field-full-width">
-        <mat-label>$orderby</mat-label>
-        <mat-select multiple
-                    [(value)]="orderByProperties"
-                    (selectionChange)="generateUrl()">
-          @for (property of properties; track property) {
-          <mat-option [value]="property">{{property.name}}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-
 
 
     <div class="col-12">
       <mat-form-field appearance="fill"
                       class="app-form-field-full-width">
+        <mat-label>Url</mat-label>
         <textarea matInput
                   cdkTextareaAutosize
                   #autosize="cdkTextareaAutosize"
                   type="text"
-                  readonly
                   [value]="url">
           </textarea>
       </mat-form-field>
@@ -307,24 +289,19 @@
           </div>
 
           @if (result) {
-            <div class="col-12">
-              @if (loadingResult) {
-              <mat-spinner class="app-spinner"></mat-spinner>
-              }
-              @else {
-              <ngx-json-viewer [json]="result">
-              </ngx-json-viewer>
-              }
-            </div>
+          <div class="col-12">
+            @if (loadingResult) {
+            <mat-spinner class="app-spinner"></mat-spinner>
+            }
+            @else {
+            <ngx-json-viewer [json]="result">
+            </ngx-json-viewer>
+            }
+          </div>
           }
         </div>
       </div>
 
     </div>
-
-
-
-
-
   </div>
 </div>

@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subject, Subscription, of, takeUntil } from 'rxjs';
-import { filter, mergeMap } from 'rxjs/operators';
+import { mergeMap } from 'rxjs/operators';
 import { AppService } from './app.service';
 import { AppSettings } from "./types/app-settings";
 import { Comparer } from './types/comparer';
@@ -8,9 +8,9 @@ import { EndPoint } from './types/end-point';
 import { FilterItem } from './types/filter-item';
 import { Property } from './types/property';
 import { PropertyConverter } from './types/property-converter';
-import { Type } from './types/type';
 import { ValueConverter } from './types/value-converter';
 import { RequestHeaders } from './types/request-headers';
+import { CsdlProperty } from './types/csdl-property';
 
 
 @Component({
@@ -22,10 +22,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   destroySubscriptions$ = new Subject<void>();
   appSettings: AppSettings = { baseUrls: [], endPoints: [] };
-  metaData!: Record<string, Type>;
+  metaData!: CsdlProperty[];
 
   baseUrl: string = '';
-  apiKey: string = '';
+  apiKey: string = '0zYoVENMfQZiwyQsWzTPoYqn70bbpjDB79x7NRenM';
   endPoint!: EndPoint;
   coordinateSystems: any[] = [
     {
@@ -118,6 +118,11 @@ export class AppComponent implements OnInit, OnDestroy {
     {
       value: 'notin',
       format: '<propertyformat> notin (<valueformat>)',
+      propertyTypes: this.propertyTypes.filter(t => t == 'String')
+    },
+    {
+      value: 'has',
+      format: 'has(<propertyformat>, <valueformat>)',
       propertyTypes: this.propertyTypes.filter(t => t == 'String')
     },
     {
@@ -306,7 +311,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.setMappings();
     this.service.getAppSettings()
       .pipe(mergeMap(data => this.setBaseUrlAndApiKey(data)))
-      .pipe(mergeMap(() => this.service.getMetaData(this.baseUrl)))
+      .pipe(mergeMap(() => this.service.getMetaData(this.baseUrl, this.endPoint.property)))
       .subscribe((result) => this.setMetaData(result));
   }
 
@@ -363,7 +368,6 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     if (!storedApiKey) {
-      this.apiKey = '';
       localStorage.setItem(this.baseUrl, this.apiKey);
     } else {
       this.apiKey = storedApiKey;
@@ -380,33 +384,28 @@ export class AppComponent implements OnInit, OnDestroy {
     return of(this.baseUrl);
   }
 
-  setMetaData(metaData: Record<string, Type>) {
+  setMetaData(metaData: any[]) {
     this.metaData = metaData;
     this.setProperties();
     this.generateUrl();
   }
 
-
   setProperties(): void {
     this.properties = [];
     let metaDataResultCopy = structuredClone(this.metaData);
-    let properties = metaDataResultCopy[`DigitaleDeltaModels.${this.endPoint.property}`].properties ?? [];
-    properties.forEach((property: Property) => this.expandProperties(metaDataResultCopy, property));
+    this.properties = metaDataResultCopy.map((csdlProperty: CsdlProperty) => this.expandProperties(csdlProperty));
+    this.setFilterItems();
   }
 
   setFilterItems(): void {
-    var existingFilterProperties = structuredClone(this.filterItems).map(a => a.property);
-    var newFilterProperties = structuredClone(this.filterProperties);
-    var filterPropertiesToDelete = existingFilterProperties.filter(a => !newFilterProperties.map(b => b.name).includes(a.name));
-    var filterPropertiesToAdd = newFilterProperties.filter(a => !existingFilterProperties.map(b => b.name).includes(a.name));
-    this.filterItems.forEach((filterItem, index) => {
-      if (filterPropertiesToDelete.map(a => a.name).includes(filterItem.property.name)) {
-        this.filterItems.splice(index, 1);
-      }
-    });
-    filterPropertiesToAdd.forEach(filterProperty => {
-      this.filterItems.push(new FilterItem(filterProperty));
-    });
+    this.filterItems.push(new FilterItem({
+      isArray: false,
+      isKey: false,
+      isNullable: true,
+      isString: false,
+      name: '',
+      type: ''
+    }))
     this.generateUrl();
   }
 
@@ -414,7 +413,7 @@ export class AppComponent implements OnInit, OnDestroy {
   onBaseUrlChange(args: any): void {
     this.apiKey = localStorage.getItem(this.baseUrl) ?? '';
     this.storeBaseUrlAndApiKey();
-    this.service.getMetaData(this.baseUrl)
+    this.service.getMetaData(this.baseUrl, this.endPoint.property)
       .subscribe((result) => this.setMetaData(result));
   }
 
@@ -429,7 +428,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onEndPointChange(args: any): void {
-    this.setProperties();
+    this.service.getAppSettings()
+      .pipe(mergeMap(() => this.service.getMetaData(this.baseUrl, this.endPoint.property)))
+      .subscribe((result) => this.setMetaData(result));
+    this.filterItems = [];
     this.generateUrl();
   }
 
@@ -452,6 +454,12 @@ export class AppComponent implements OnInit, OnDestroy {
     this.generateUrl();
   }
 
+  onFilterItemPropertyChange(args: any, filterItem: FilterItem, index: number): void {
+    filterItem = new FilterItem(args.value);
+    this.filterItemChange$.next(index);
+    this.generateUrl();
+  }
+
   onFilterItemPropertyConverterInputValueChange(args: any, filterItem: FilterItem, index: number): void {
     this.filterItemChange$.next(index);
     this.generateUrl();
@@ -469,23 +477,40 @@ export class AppComponent implements OnInit, OnDestroy {
     this.generateUrl();
   }
 
-  //functions
-  expandProperties(metaDataResult: Record<string, Type>, property: Property): void {
-    this.formatProperty('', property);
-    var nestedProperties = metaDataResult[property.type]?.properties ?? [];
-    nestedProperties.forEach(p => this.formatProperty(property.name, p));
-    if (nestedProperties.length > 0) {
-      nestedProperties.forEach(nestedProperty => {
-        this.expandProperties(metaDataResult, nestedProperty);
-      });
-    } else {
-      this.properties.push(property);
+  onFilterItemLogicalChange(args: any, filterItem: FilterItem, index: number): void {
+    filterItem.logical = args.value;
+    if (filterItem.logical != null && !this.filterItems[index + 1]) {
+      this.filterItems.push(new FilterItem({
+        isArray: false,
+        isKey: false,
+        isNullable: true,
+        isString: false,
+        name: '',
+        type: ''
+      }));
     }
+    if (filterItem.logical == null) {
+      this.filterItems.splice(index + 1, 1);
+    }
+    this.generateUrl();
   }
 
-  formatProperty(parent: string, property: Property): void {
-    property.type = property.type.replace('Collection(', '').replace(')', '').replace('Edm.', '');
-    property.name = `${parent}${parent != '' ? '/' : ''}${property.name}`;
+  //functions
+  expandProperties(csdlProperty: CsdlProperty): Property {
+    var property = {
+      isArray: false,
+      isKey: false,
+      isNullable: false,
+      isString: false,
+      name: csdlProperty.path,
+      type: csdlProperty.edmType
+    };
+    this.formatProperty(property);
+    return property;
+  }
+
+  formatProperty(property: Property): void {
+    property.type = property.type.replace('Edm.', '');
   }
 
   storeBaseUrlAndApiKey(): void {
@@ -495,15 +520,17 @@ export class AppComponent implements OnInit, OnDestroy {
 
   generateUrl(): void {
     this.nextUrl = null;
-    this.url = `${this.baseUrl}/${this.endPoint.url}?\n$top=${this.pageSize}`;
+    this.url = `${this.baseUrl}/${this.endPoint.url}?$top=${this.pageSize}`;
     if (this.count != null) {
-      this.url += `&\n$count=${this.count}`;
+      this.url += `&$count=${this.count}`;
     }
 
-    let validFilterItems = this.filterItems.filter(q => this.validateFilterItem(q));
-    console.log(validFilterItems);
+    if (this.selectProperties?.length > 0) {
+      this.url += `&$select=${this.selectProperties.map(p => p.name).join(',')}`;
+    }
+    let validFilterItems = this.filterItems.filter((item, index) => this.validateFilterItem(item, index));
     if (validFilterItems?.length > 0) {
-      this.url += '&\n$filter=';
+      this.url += '&$filter=';
       validFilterItems.forEach((filterItem, index, all) => {
         let propertyFormat = filterItem.propertyConverter.data?.format ?? '<property>';
         let valueFormat = filterItem.valueConverter.data?.format ?? '<value>';
@@ -516,19 +543,16 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       })
     }
-
-    if (this.selectProperties?.length > 0) {
-      this.url += `&\n$select=${this.selectProperties.map(p => p.name).join(',')}`;
-    }
-    if (this.orderByProperties?.length > 0) {
-      this.url += `&\n$orderby=${this.orderByProperties.map(p => p.name).join(',')}`;
-    }
-
   }
 
   formatFilterValue(value: any, valueType: string): any {
     switch (valueType) {
       case 'String':
+        if ((value as string).indexOf(',') > 0) {
+          return `'${(value as string).split(',').join("','")}'`;
+        } else {
+          return `'${value}'`;
+        }
       case 'Geography':
         return `'${value}'`;
       case 'DateTimeOffset':
@@ -540,12 +564,12 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  validateFilterItem(filterItem: FilterItem): boolean {
+  validateFilterItem(filterItem: FilterItem, index: number): boolean {
     let propertyConverterInputValid: boolean = true;
     if (filterItem.propertyConverter.value) {
       propertyConverterInputValid = filterItem.propertyConverter.data?.inputType ? filterItem.propertyConverter.data?.inputValue != null : true;
     }
-    return propertyConverterInputValid && filterItem.comparer.value != null && filterItem.value != null && filterItem.logical != null;
+    return propertyConverterInputValid && filterItem.comparer.value != null && filterItem.value != null && (index == this.filterItems.length - 1 || filterItem.logical != null);
   }
 
   //request
@@ -559,8 +583,10 @@ export class AppComponent implements OnInit, OnDestroy {
           this.nextUrl = result['@odata.nextLink'];
         },
         error: (error: any) => {
+          console.log(error);
           this.result = { error: error };
           this.nextUrl = null;
+          this.loadingResult = false;
         },
         complete: () => {
           this.loadingResult = false;
@@ -581,6 +607,7 @@ export class AppComponent implements OnInit, OnDestroy {
           error: (error: any) => {
             this.result = { error: error };
             this.nextUrl = null;
+            this.loadingResult = false;
           },
           complete: () => {
             this.loadingResult = false;
@@ -599,8 +626,3 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
 }
-
-
-
-
-
