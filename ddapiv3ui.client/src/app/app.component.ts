@@ -25,7 +25,7 @@ export class AppComponent implements OnInit, OnDestroy {
   metaData!: CsdlProperty[];
 
   baseUrl: string = '';
-  apiKey: string = '0zYoVENMfQZiwyQsWzTPoYqn70bbpjDB79x7NRenM';
+  apiKey: string = 'xxxxxxxx';
   endPoint!: EndPoint;
   coordinateSystems: any[] = [
     {
